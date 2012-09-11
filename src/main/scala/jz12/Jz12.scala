@@ -15,9 +15,6 @@ class Jz12 extends Plan {
   }
 }
 
-case class Html5(nodes: NodeSeq) extends 
-  ComposeResponse(HtmlContent ~> ResponseString("<!DOCTYPE html>\n" + nodes.toString))
-
 object Bootstrap {
   def apply(title: String, body: NodeSeq) =
     <html>

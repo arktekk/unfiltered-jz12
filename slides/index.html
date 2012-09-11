@@ -40,14 +40,193 @@
     <!-- Any section element inside of this container is displayed as a slide -->
     <div class="slides">
         <section>
-            <h1>Unfiltered</h1>
-
-            <h3>A Scala Web Toolkit</h3>
+            <h1>Unfiltered Workshop</h1>
+            <p>Jon-Anders Teigen</p>
+            <p><a href="http://arktekk.no">Arktekk</a></p>
+            <p><a href="http://twitter.com/jteigen">@jteigen</a></p>
         </section>
         
         <section>
+            <h2>The workshop</h2>
+
+            <h3><a href="https://github.com/arktekk/unfiltered-jz12">https://github.com/arktekk/unfiltered-jz12</a></h3>
             
+            <ul>
+                <li>Work in pairs</li>
+                <li>Ask if you get stuck</li>
+                <li>Have fun</li>
+            </ul>
         </section>
+        
+        <section>
+            <h1>Unfiltered</h1>
+            <h3><a href="https://github.com/unfiltered/unfiltered">Toolkit for servicing HTTP requests</a></h3>
+            <ul>
+                <li>simple</li>
+                <li>tiny (core is 1390 CLOC)</li>
+                <li>leverages Scala features</li>
+                <li>HTTP oriented</li>
+            </ul>
+        </section>
+        
+        <section>
+            <h1>What ?</h1>
+            <ul>
+                <li>http api</li>
+                <li>servlet filters (2.3)</li>
+                <li>async servlet filters (3.0)</li>
+                <li>netty</li>
+                <li>websockets</li>
+                <li>uploads</li>
+                <li>oauth</li>
+                <li>++</li>
+            </ul>
+        </section>
+        
+        <section>
+            <h2>What have your framwork done for you lately ?</h2>
+            <h3><span style="background-color: green;">libraries/toolkits</span> vs <span style="background-color: red">frameworks</span></h3>
+            <ul class="fragment">
+                <li>HTTP library</li>
+                <li>Use whatever you need, ignore the rest</li>
+            </ul>
+        </section>
+        
+        <section>            
+<pre class="prettyprint nocode">
+<code>GET / HTTP/1.1
+User-Agent: curl/7.19.7
+Host: localhost:8080
+Accept: */*
+
+HTTP/1.1 200 OK
+Content-Type: text/html; charset=utf-8
+Content-Length: 357
+Server: Jetty(7.6.0.v20120127)
+</code></pre>
+            
+<pre class="fragment prettyprint scala">
+<code>import unfiltered.filter.Plan
+import unfiltered.response._
+import unfiltered.request._
+
+class Example extends Plan {
+  def intent = {
+    case GET(Path("/")) => OK ~> Html5(&lt;html&gt;...&lt;/html&gt;)    
+  }
+}
+</code></pre>            
+
+        </section>
+        
+        <section>
+            <h3>Matching Requests ( Path parameters )</h3>
+<pre class="prettyprint nocode">
+<code>GET /item/5 HTTP/1.1
+User-Agent: curl/7.19.7
+Host: localhost:8080
+Accept: */*        
+</code></pre>
+<pre class="prettyprint scala">
+<code>def intent = {
+  case Path(Seg(List("item", number))) => // number == "5"  
+    Ok ~> Html5(...)
+  
+  case Path(Seg(List("you", can, "have", many))) =>
+    Ok ~> Html5(...)
+}
+</code></pre>
+        </section>
+        
+        <section>
+            <h3>Matching Requests (Query parameters)</h3>
+<pre class="prettyprint nocode">
+<code>GET /item?filter=foo&filter=bar&monkey=donkey HTTP/1.1
+User-Agent: curl/7.19.7
+Host: localhost:8080
+Accept: */*
+</code></pre>
+<pre class="prettyprint scala">
+<code>def intent = {
+  case Path("/item") & QueryParams(q) =>
+    val filter = q("filter") // Seq("foo", "bar")
+    val monkey = q("monkey") // Seq("donkey")
+    val nope   = q("nope")   // Seq()
+    Ok ~> Html5(...)    
+}    
+</code></pre>            
+        </section>
+        
+        <section>
+            <h3>Compose a Response</h3>
+<pre class="prettyprint nocode">
+<code>HTTP/1.1 503 Service Unavailable
+Content-Type: text/xml; charset=utf-8
+Content-Length: 28
+Server: Jetty(7.6.0.v20120127)
+
+&lt;error&gt;not available&lt;/error&gt;    
+</code></pre>
+            
+<pre class="prettyprint scala">
+<code>def intent = {
+  case Path("/") =>
+    ServiceUnavailable ~> TextXmlContent ~> 
+      ResponseString(&lt;error&gt;not available&lt;/error&gt;)
+}
+</code></pre>
+        </section>
+
+        <section>
+            <h3>What about templating ?</h3>
+<pre class="prettyprint scala">
+<code>&lt;ul&gt;{
+  Seq(1,2,3).map{ i => &lt;li&gt;{i}&lt;/li&gt; }
+}&lt;/ul&gt;
+</code></pre>
+            
+<pre class="prettyprint html">
+<code>&lt;ul&gt;
+    &lt;li&gt;1&lt;/li&gt;
+    &lt;li&gt;2&lt;/li&gt;
+    &lt;li&gt;3&lt;/li&gt;
+&lt;/ul&gt;
+</code></pre>
+        </section>
+        
+        <section>
+            <h3>A full example</h3>
+            <pre class="prettyprint scala"><code>
+def form(msg:String) = Html5(
+  &lt;div&gt;
+    &lt;p&gt;{msg}&lt;/p&gt;
+    &lt;form action="/" method="post"&gt;
+      &lt;input type="text" name="name"/&gt;
+      &lt;input type="submit"/&gt;
+    &lt;/form&gt;
+  &lt;/div&gt;)
+
+def intent = {
+  case req @ Path("/") => req match {
+    case GET(_) =>
+      form("")
+    case POST(Params(p)) =>
+      p("name").headOption match {
+        case Some(name) => Html5(&lt;hi&gt;{name}&lt;/hi&gt;)
+        case _          => form("name is required")
+      }
+    case _ => MethodNotAllowed
+  }
+}
+            </code></pre>
+        </section>
+        
+        <section>
+            <h1>Oppgavetid</h1>
+            
+            <h3><a href="https://github.com/arktekk/unfiltered-jz12">https://github.com/arktekk/unfiltered-jz12</a></h3>
+        </section>
+        
     </div>
 
     <!-- The navigational controls UI -->

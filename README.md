@@ -7,6 +7,7 @@ IntelliJ users: run the `gen-idea` command and import your project
 
 # Exercises #
 The goal of this exercise is to write an application showing the various JavaZone events, complete with sessions and speakers.
+A template application is available at `src/main/scala/jz12/Jz12.scala`
 
 To start the application either call `test:run` from sbt, or run `src/test/scala/js12/Run.scala` directly from your IDE. Compilation (without running the application) can be done either from your IDE or with the `compile` command in sbt.
 
@@ -17,4 +18,5 @@ The application comes with a library found at `src/main/scala/jz12/Incogito.scal
 3. show information about a single session
 4. show a list of all the speakers
 5. filter sessions based on labels and levels
-6. group the sessions by day, timeslot and room (just like in incogito) 
+6. group the sessions by day, timeslot and room (just like in incogito)
+7. make it pretty, add more features or whatever you feel like
