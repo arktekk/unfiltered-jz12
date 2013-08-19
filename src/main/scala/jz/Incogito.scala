@@ -1,12 +1,15 @@
-package jz12
+package jz
 
 import dispatch._
-import net.liftweb.json._
+import org.json4s._, native._
 import org.joda.time.DateTime
 import xml.Unparsed
 
+import concurrent.ExecutionContext.Implicits.global
+
 object Json {
-  def apply[A](f:JValue => A) = f compose parse
+  def apply[A](f:JValue => A) = as.Bytes andThen utf8 andThen f  
+  def utf8(bytes:Array[Byte]) = JsonParser.parse(new String(bytes, "UTF-8"))
   
   implicit val formats = DefaultFormats
 }
@@ -15,14 +18,14 @@ import Json.formats
 
 object Incogito {
   def fromUrl(base:String) = 
-    Http(url(base) <:< Map("Accept" -> "application/json") >- Json(_.extract[Incogito]))   
+    Http(url(base) <:< Map("Accept" -> "application/json") OK Json(_.extract[Incogito])).apply
 }
 
 case class Incogito(events:List[Event])
 
 case class Event(selfUrl:String, id:String, name:String, labels:List[Label], blurb:String, levels:List[Level]){
   lazy val sessions =
-    Http(url(selfUrl + "/sessions") <:< Map("Accept" -> "application/json") >- Json(_.extract[Sessions]))
+    Http(url(selfUrl + "/sessions") <:< Map("Accept" -> "application/json") OK Json(_.extract[Sessions].sessions)).apply
 }
 
 case class Sessions(sessions:List[Session])
